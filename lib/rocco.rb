@@ -68,6 +68,9 @@ end
 # When `block` is given, it must read the contents of the file using whatever
 # means necessary and return it as a string. With no `block`, the file is read
 # to retrieve data.
+# If you want some comments to be ignored, set the `:ignore_chars` options.
+# By default, lines starting with #! will be ignored.
+#! For example, this line is ignored.
 class Rocco
   VERSION = '0.4'
 
@@ -82,10 +85,12 @@ class Rocco
     defaults = {
       :language      => 'ruby',
       :comment_chars => '#',
+      :ignore_chars => '#\!'
     }
     @options = defaults.merge(options)
     @sources = sources
     @comment_pattern = Regexp.new("^\\s*#{@options[:comment_chars]}")
+    @ignore_pattern = Regexp.new("^\\s*#{@options[:ignore_chars]}")
     @sections = highlight(split(parse(@data)))
   end
 
@@ -121,6 +126,8 @@ class Rocco
     lines.shift if lines[0] =~ /^\#\!/
     lines.each do |line|
       case line
+      when @ignore_pattern
+        next
       when @comment_pattern
         if code.any?
           sections << [docs, code]
